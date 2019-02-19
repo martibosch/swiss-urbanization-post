@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean download_gmb download_clc data lint requirements sync_data_to_s3 sync_data_from_s3
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -24,11 +24,41 @@ else
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 endif
 
-## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py
+## Download data
+# variables
+DOWNLOAD_GMB_PY = src/data/download_gmb.py
+DOWNLOAD_CLC_PY = src/data/download_clc.py
 
-## Delete all compiled Python files
+GMB_DIR = data/raw/gmb
+GMB_SHP_BASENAME = g1a18
+GMB_SHP_FILEPATH := $(GMB_DIR)/$(GMB_SHP_BASENAME).shp
+
+CLC_DIR = data/raw/clc
+CLC_BASENAMES = g100_clc00_V18_5 g100_clc06_V18_5 g100_clc12_V18_5
+CLC_TIF_FILEPATHS := $(addsuffix .tif, $(addprefix $(CLC_DIR)/, $(CLC_BASENAMES)))
+
+# rules
+$(GMB_DIR):
+	mkdir $(GMB_DIR)
+$(GMB_DIR)/%.zip: $(DOWNLOAD_GMB_PY) | $(GMB_DIR)
+	$(PYTHON_INTERPRETER) $(DOWNLOAD_GMB_PY) $@
+$(GMB_DIR)/%.shp: $(GMB_DIR)/%.zip
+	unzip -j $< 'ggg_2018-LV95/shp/$(GMB_SHP_BASENAME)*' -d $(GMB_DIR)
+	touch $(GMB_SHP_FILEPATH)
+
+$(CLC_DIR):
+	mkdir $(CLC_DIR)
+$(CLC_DIR)/%.zip: $(DOWNLOAD_CLC_PY) | $(CLC_DIR)
+	$(PYTHON_INTERPRETER) $(DOWNLOAD_CLC_PY) $(basename $(notdir $@)) $(basename $@).zip
+$(CLC_DIR)/%.tif $(CLC_DIR)/%.aux: $(CLC_DIR)/%.zip
+	unzip $< '$(basename $(notdir $@)).*' -d $(CLC_DIR)
+	touch $@
+
+download_gmb: $(GMB_SHP_FILEPATH)
+download_clc: $(CLC_TIF_FILEPATHS)
+
+
+## Clean rules
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
