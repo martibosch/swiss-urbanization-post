@@ -1,0 +1,14 @@
+name: swiss-urbanization-post
+dependencies:
+  - pip
+  - pip:
+    - -e .
+    - python-dotenv>=0.5.1
+    - awscli
+  - setuptools
+  - wheel
+  - flake8
+  - sphinx
+  - click
+  - coverage
+  - python=3.6
