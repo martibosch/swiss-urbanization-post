@@ -1,4 +1,4 @@
-.PHONY: clean download_gmb download_clc data lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean download_gmb download_clc urban_extracts lint requirements sync_data_to_s3 sync_data_from_s3
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -35,7 +35,8 @@ GMB_SHP_FILEPATH := $(GMB_DIR)/$(GMB_SHP_BASENAME).shp
 
 CLC_DIR = data/raw/clc
 CLC_BASENAMES = g100_clc00_V18_5 g100_clc06_V18_5 g100_clc12_V18_5
-CLC_TIF_FILEPATHS := $(addsuffix .tif, $(addprefix $(CLC_DIR)/, $(CLC_BASENAMES)))
+CLC_TIF_FILEPATHS := $(addsuffix .tif, \
+	$(addprefix $(CLC_DIR)/, $(CLC_BASENAMES)))
 
 # rules
 $(GMB_DIR):
@@ -56,6 +57,35 @@ $(CLC_DIR)/%.tif $(CLC_DIR)/%.aux: $(CLC_DIR)/%.zip
 
 download_gmb: $(GMB_SHP_FILEPATH)
 download_clc: $(CLC_TIF_FILEPATHS)
+
+
+## Urban extracts
+# variables
+MAKE_URBAN_EXTRACT_PY = src/data/make_urban_extract.py
+URBAN_EXTRACTS_DIR = data/processed/urban_extracts
+AGGLOMERATION_SLUGS = basel geneve zurich
+URBAN_EXTRACTS_TIF_FILEPATHS := $(addprefix $(URBAN_EXTRACTS_DIR)/, $(foreach CLC_BASENAME, $(CLC_BASENAMES), $(foreach AGGLOMERATION_SLUG, $(AGGLOMERATION_SLUGS), $(AGGLOMERATION_SLUG)-$(CLC_BASENAME).tif)))
+
+# rules
+$(URBAN_EXTRACTS_DIR):
+	mkdir $(URBAN_EXTRACTS_DIR)
+
+# option 1: metaprogramming: generate rules on the fly
+define MAKE_URBAN_EXTRACT
+$(URBAN_EXTRACTS_DIR)/$(AGGLOMERATION_SLUG)-%.tif: $(CLC_DIR)/%.tif $(GMB_SHP_FILEPATH) | $(URBAN_EXTRACTS_DIR)
+	$(PYTHON_INTERPRETER) $(MAKE_URBAN_EXTRACT_PY) $(GMB_SHP_FILEPATH) $(AGGLOMERATION_SLUG) $$< $$@
+endef
+
+$(foreach AGGLOMERATION_SLUG, $(AGGLOMERATION_SLUGS), $(eval $(MAKE_URBAN_EXTRACT)))
+
+
+# option 2: second expansion
+# .SECONDEXPANSION:
+# $(URBAN_EXTRACTS_DIR)/%.tif: $(CLC_DIR)/$$(word 2, $$(subst -, , $$(notdir $$*))).tif $(MAKE_URBAN_EXTRACT_PY) $(GMB_SHP_FILEPATH) | $(URBAN_EXTRACTS_DIR)
+# 	$(eval AGGLOMERATION_CLC := $(subst -, , $(notdir $@)))
+# 	echo $(PYTHON_INTERPRETER) $(MAKE_URBAN_EXTRACT_PY) $(GMB_SHP_FILEPATH) $< $(word 1, $(AGGLOMERATION_CLC)) $(word 2, $(AGGLOMERATION_CLC))
+
+urban_extracts: $(URBAN_EXTRACTS_TIF_FILEPATHS)
 
 
 ## Clean rules
