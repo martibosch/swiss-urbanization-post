@@ -1,4 +1,4 @@
-.PHONY: clean download_gmb download_clc urban_extracts lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean download_gmb download_clc urban_extracts figure lint requirements sync_data_to_s3 sync_data_from_s3
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -78,7 +78,6 @@ endef
 
 $(foreach AGGLOMERATION_SLUG, $(AGGLOMERATION_SLUGS), $(eval $(MAKE_URBAN_EXTRACT)))
 
-
 # option 2: second expansion
 # .SECONDEXPANSION:
 # $(URBAN_EXTRACTS_DIR)/%.tif: $(CLC_DIR)/$$(word 2, $$(subst -, , $$(notdir $$*))).tif $(MAKE_URBAN_EXTRACT_PY) $(GMB_SHP_FILEPATH) | $(URBAN_EXTRACTS_DIR)
@@ -86,6 +85,17 @@ $(foreach AGGLOMERATION_SLUG, $(AGGLOMERATION_SLUGS), $(eval $(MAKE_URBAN_EXTRAC
 # 	echo $(PYTHON_INTERPRETER) $(MAKE_URBAN_EXTRACT_PY) $(GMB_SHP_FILEPATH) $< $(word 1, $(AGGLOMERATION_CLC)) $(word 2, $(AGGLOMERATION_CLC))
 
 urban_extracts: $(URBAN_EXTRACTS_TIF_FILEPATHS)
+
+## Figure
+# variables
+MAKE_FIGURE_PY = src/visualization/make_figure.py
+FIGURE_FILEPATH = reports/figures/swiss-urbanization.png
+METRICS = proportion_of_landscape fractal_dimension_am
+
+# rules
+$(FIGURE_FILEPATH): $(MAKE_FIGURE_PY) $(URBAN_EXTRACTS_TIF_FILEPATHS)
+	$(PYTHON_INTERPRETER) $(MAKE_FIGURE_PY) $(URBAN_EXTRACTS_DIR) $(FIGURE_FILEPATH) --metrics $(METRICS) --clc-basenames $(CLC_BASENAMES) --agglomeration-slugs $(AGGLOMERATION_SLUGS)
+figure: $(FIGURE_FILEPATH)
 
 
 ## Clean rules
