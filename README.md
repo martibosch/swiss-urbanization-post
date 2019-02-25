@@ -1,57 +1,22 @@
 swiss-urbanization-post
-==============================
+=======================
 
-Materials to reproduce the blog post of http://martibosch.github.io/managing-analysis-workflows-geodata/
+Materials to reproduce the blog post of http://martibosch.github.io/managing-analysis-workflows-geodata-make/
 
-Project Organization
-------------
+Prerequisites: a Python distribution with conda
 
-    ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.testrun.org
+Instructions to reproduce (commands executed from the root directory of this repository):
 
+1. Create the conda environment by executing `make create_environment`
 
---------
+2. Activate the environment by executing `conda activate swiss-urbanization-post`
+
+3. Update the `src/data/download_clc.py` script so that it downloads the [CORINE Land Cover](https://land.copernicus.eu/pan-european/corine-land-cover) datasets for the years 2000, 2006 and 2012 (the datasets are open but require registration) to the `data/raw/clc` directory, **or** contact me in order to get a temporary access keys to a S3 service that will provide you such files without need to change the code.
+
+4. Generate the figure to `reports/figures/swiss-urbanization.png` by executing `make figure`
+
+See the [overview](https://github.com/martibosch/swiss-urbanization-post/blob/master/notebooks/overview.ipynb) notebook for a more visual description of the workflow.
+
+---
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
